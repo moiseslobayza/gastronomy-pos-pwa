@@ -64,7 +64,7 @@ Abrí la app
 
 Ícono de instalación en la barra de direcciones → Instalar
 
-### Estructura típica del proyecto
+### 🗂️ Estructura típica del proyecto
 
 sandwicheria-app/
 ├── index.html
@@ -72,7 +72,7 @@ sandwicheria-app/
 │   └── styles.css
 ├── js/
 │   ├── app.js
-│   └── storage.js              # opcional: lógica de persistencia
+│   └── storage.js              
 ├── pwa/
 │   ├── manifest.json
 │   └── service-worker.js
@@ -83,7 +83,7 @@ sandwicheria-app/
 │   └── img/
 └── README.md
 
-### Datos y persistencia
+### 💾 Datos y persistencia
 Los datos se guardan localmente en el dispositivo.
 
 Si borrás los datos del navegador o desinstalás/limpiás storage, se pierde el historial.
@@ -92,7 +92,7 @@ Recomendación práctica (si ya lo implementaste o lo vas a implementar):
 
 Exportar/Importar ventas a JSON/CSV para backups
 
-### Deploy (GitHub Pages)
+### 🚀 Deploy (GitHub Pages)
 
 Subí el repo a GitHub
 
@@ -104,7 +104,7 @@ Guardá y esperá a que te dé la URL
 
 Importante: la PWA funciona perfecto en GitHub Pages porque sirve por HTTPS.
 
-### Troubleshooting rápido
+### 🧪  Troubleshooting rápido
 
 No se instala / no cachea: asegurate de estar usando http:// o https:// (no file://)
 
@@ -116,7 +116,7 @@ DevTools → Application → Storage → Clear site data
 
 Íconos no aparecen: revisá rutas del manifest.json y tamaños 192/512.
 
-### Roadmap (ideas)
+### 🛣️ Roadmap (ideas)
 
 Exportar/Importar ventas (JSON/CSV)
 
@@ -128,11 +128,11 @@ Multi-usuario / PIN (modo empleado)
 
 Sync opcional a la nube (cuando haya internet)
 
-### Autor
+### 👤 Autor
 
 Moisés Lobayza
 
-📄 Licencia
+### 📄 Licencia
 
 MIT — libre para usar y modificar.
 
