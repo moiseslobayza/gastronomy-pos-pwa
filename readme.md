@@ -84,7 +84,7 @@ sandwicheria-app/
 │   │   └── icon-512.png
 │   └── img/
 └── README.md
-
+```
 
 ### 💾 Datos y persistencia
 Los datos se guardan localmente en el dispositivo.
