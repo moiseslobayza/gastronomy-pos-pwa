@@ -64,15 +64,17 @@ Abrí la app
 
 Ícono de instalación en la barra de direcciones → Instalar
 
-### 🗂️ Estructura típica del proyecto
 
+### 📁 Estructura típica del proyecto
+
+```text
 sandwicheria-app/
 ├── index.html
 ├── css/
 │   └── styles.css
 ├── js/
 │   ├── app.js
-│   └── storage.js              
+│   └── storage.js
 ├── pwa/
 │   ├── manifest.json
 │   └── service-worker.js
@@ -82,6 +84,7 @@ sandwicheria-app/
 │   │   └── icon-512.png
 │   └── img/
 └── README.md
+
 
 ### 💾 Datos y persistencia
 Los datos se guardan localmente en el dispositivo.
