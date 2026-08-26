@@ -4,7 +4,7 @@
    nunca en el cache del Service Worker. */
 
 const CACHE_PREFIX = "sandwicheria-shell-";
-const CACHE_NAME = `${CACHE_PREFIX}v6`;
+const CACHE_NAME = `${CACHE_PREFIX}v7`;
 const LEGACY_CACHES = new Set(["sandwicheria-v3"]);
 const SCOPE_URL = new URL("./", self.registration.scope).href;
 const INDEX_URL = new URL("./index.html", self.registration.scope).href;

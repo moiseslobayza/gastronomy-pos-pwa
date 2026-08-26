@@ -564,6 +564,10 @@ select:disabled {
   gap: 12px;
 }
 
+#productForm {
+  scroll-margin-top: calc(100px + max(8px, env(safe-area-inset-top, 0px)));
+}
+
 .field {
   display: flex;
   min-width: 0;
