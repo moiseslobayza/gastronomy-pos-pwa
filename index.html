@@ -1,210 +1,363 @@
 <!doctype html>
-<html lang="es">
+<html lang="es-AR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ventas - Sandwichería</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17211b">
+  <meta name="color-scheme" content="light">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Ventas">
 
-  <link rel="stylesheet" href="styles.css">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#111827">
-  <link rel="icon" href="icon-192.png">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Ventas · Sandwichería</title>
+  <meta name="description" content="Punto de venta simple, privado y offline para una sandwichería.">
 
-  <script defer src="app.js"></script>
+  <link rel="stylesheet" href="./styles.css?v=6">
+  <link rel="manifest" href="./manifest.json?v=6">
+  <link rel="icon" href="./icon-192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <script defer src="./app.js?v=6"></script>
 </head>
-
 
 <body>
   <div class="app">
+    <div id="appStatus" class="statusBanner" role="status" hidden>
+      <span id="appStatusText"></span>
+      <button id="appStatusAction" class="statusAction" type="button" hidden></button>
+    </div>
 
-    <!-- =========================
-         PANTALLA 1: HOY
-    ========================== -->
-    <section id="screen-hoy">
+    <header class="appHeader" id="appHeader">
+      <div>
+        <p class="eyebrow">Punto de venta</p>
+        <h1 class="brand">Sandwichería</h1>
+      </div>
+      <div class="headerMeta">
+        <span class="connectionDot" id="connectionDot" aria-hidden="true"></span>
+        <span id="dateText">--</span>
+      </div>
+    </header>
 
-      <header class="topbar">
-        <h1 class="title">Sandwichería</h1>
-        <div class="date" id="dateText">--</div>
-      </header>
+    <nav class="mainNav" id="mainNav" aria-label="Secciones principales">
+      <button class="navButton isActive" type="button" data-screen="hoy">Hoy</button>
+      <button class="navButton" type="button" data-screen="historial">Historial</button>
+      <button class="navButton" type="button" data-screen="productos">Productos</button>
+    </nav>
 
-      <section class="card">
-        <p class="kpiLabel">Total del día</p>
-        <p class="kpiValue" id="totalDia">$0</p>
+    <main>
+      <div class="loadingState" id="loadingState" role="status">
+        <span id="loadingMessage">Preparando tus datos…</span>
+        <button type="button" class="btnSecondary startupRestore" id="btnStartupRestore" hidden>Restaurar un backup</button>
+      </div>
 
-        <button type="button" class="btn" id="btnNuevaVenta">+ Nueva venta</button>
-      </section>
-
-      <section class="card">
-        <div class="chips">
-          <div class="chip">
-            <p class="label">Ventas</p>
-            <p class="value" id="kpiVentas">0</p>
+      <section id="screen-hoy" class="screen" aria-labelledby="todayTitle" hidden>
+        <section class="card heroCard">
+          <div>
+            <p class="kpiLabel" id="todayTitle">Facturación de hoy</p>
+            <p class="kpiValue" id="totalDia">$0</p>
           </div>
-          <div class="chip">
-            <p class="label">Items</p>
-            <p class="value" id="kpiItems">0</p>
+          <button type="button" class="btn primaryAction" id="btnNuevaVenta">Nueva venta</button>
+        </section>
+
+        <section class="statsGrid" aria-label="Resumen del día">
+          <article class="statCard">
+            <p class="statLabel">Ventas</p>
+            <p class="statValue" id="kpiVentas">0</p>
+          </article>
+          <article class="statCard">
+            <p class="statLabel">Productos</p>
+            <p class="statValue" id="kpiItems">0</p>
+          </article>
+          <article class="statCard">
+            <p class="statLabel">Ticket promedio</p>
+            <p class="statValue" id="kpiPromedio">$0</p>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="sectionHeading">
+            <h2>Métodos de pago</h2>
+            <span>Hoy</span>
           </div>
-          <div class="chip">
-            <p class="label">Promedio</p>
-            <p class="value" id="kpiPromedio">$0</p>
+          <dl class="paymentSummary" id="paymentSummaryHoy"></dl>
+        </section>
+
+        <section class="card">
+          <div class="sectionHeading">
+            <h2>Últimas ventas</h2>
+            <span id="latestSalesCount">0 ventas</span>
           </div>
-        </div>
-      </section>
+          <ul class="list saleList" id="listaVentas"></ul>
+          <p class="emptyState" id="emptyVentas">Todavía no hay ventas hoy.</p>
+        </section>
 
-      <section class="card">
-        <p class="sectionTitle">Últimas ventas</p>
-        <ul class="list" id="listaVentas"></ul>
-      </section>
-
-      <section class="footerActions">
-        <button type="button" class="btnSecondary" id="btnExportCSV">Exportar CSV</button>
-        <button type="button" class="btnSecondary" id="btnNewDay">Nuevo día</button>
-      </section>
-
-      <section class="footerActions" style="margin-top:10px;">
-        <button type="button" class="btnSecondary" id="btnCierre">Cierre de caja</button>
-        <button type="button" class="btnSecondary" id="btnProductos">Productos</button>
-      </section>
-
-    </section>
-
-
-    <!-- =========================
-         PANTALLA 2: NUEVA VENTA
-    ========================== -->
-    <section id="screen-venta" hidden>
-
-      <header class="topbar">
-        <h1 class="title">Nueva venta</h1>
-        <div class="date" id="ventaInfo">Ticket</div>
-      </header>
-
-      <section class="card">
-        <p class="kpiLabel">Total del ticket</p>
-        <p class="kpiValue" id="totalTicket">$0</p>
-
-        <section class="footerActions">
-          <button type="button" class="btnSecondary" id="btnCancelarVenta">Cancelar</button>
-          <button type="button" class="btnSecondary" id="btnGuardarVenta" disabled>Guardar</button>
+        <section class="actionRow">
+          <button type="button" class="btnSecondary" id="btnExportCSV">Exportar CSV</button>
+          <button type="button" class="btnSecondary" id="btnCierre">Cierre de caja</button>
         </section>
       </section>
 
-      <section class="card">
-        <p class="sectionTitle">Agregar producto</p>
+      <section id="screen-historial" class="screen" aria-labelledby="historyTitle" hidden>
+        <header class="screenHeader">
+          <div>
+            <p class="eyebrow">Consulta simple</p>
+            <h2 id="historyTitle">Historial</h2>
+          </div>
+        </header>
 
-        <div class="formGrid">
-          <label class="field">
-            <span class="fieldLabel">Categoría</span>
-            <select id="selCategoria" class="control">
-              <option value="">Elegí…</option>
-            </select>
+        <section class="card datePickerCard">
+          <button type="button" class="iconButton" id="historyPrev" aria-label="Día anterior">‹</button>
+          <label class="field growField">
+            <span class="fieldLabel">Elegir fecha</span>
+            <input id="historyDate" class="control" type="date">
           </label>
+          <button type="button" class="iconButton" id="historyNext" aria-label="Día siguiente">›</button>
+        </section>
 
-          <label class="field">
-            <span class="fieldLabel">Producto</span>
-            <select id="selProducto" class="control">
-              <option value="">Elegí…</option>
-            </select>
-          </label>
+        <section class="card historyHero">
+          <p class="kpiLabel">Facturación</p>
+          <p class="kpiValue" id="historyTotal">$0</p>
+          <p class="helper" id="historyPrettyDate">—</p>
+        </section>
 
-          <label class="field">
-            <span class="fieldLabel">Cantidad</span>
-            <input id="inpCantidad" class="control" type="number" min="1" value="1" />
-          </label>
+        <section class="statsGrid" aria-label="Resumen de la fecha elegida">
+          <article class="statCard">
+            <p class="statLabel">Ventas</p>
+            <p class="statValue" id="historySales">0</p>
+          </article>
+          <article class="statCard">
+            <p class="statLabel">Productos</p>
+            <p class="statValue" id="historyItems">0</p>
+          </article>
+          <article class="statCard">
+            <p class="statLabel">Promedio</p>
+            <p class="statValue" id="historyAverage">$0</p>
+          </article>
+        </section>
 
-          <label class="field">
-            <span class="fieldLabel">Tipo de precio</span>
-            <select id="selPrecio" class="control">
-              <option value="unidad">Unidad</option>
-              <option value="docena">Docena</option>
-            </select>
+        <section class="card">
+          <div class="sectionHeading">
+            <h2>Métodos de pago</h2>
+          </div>
+          <dl class="paymentSummary" id="paymentSummaryHistory"></dl>
+        </section>
+
+        <section class="card">
+          <div class="sectionHeading">
+            <h2>Ventas del día</h2>
+            <span id="historySalesCount">0 ventas</span>
+          </div>
+          <ul class="list saleList" id="historySalesList"></ul>
+          <p class="emptyState" id="historyEmpty">No hay ventas guardadas para esta fecha.</p>
+        </section>
+
+        <button type="button" class="btnSecondary fullWidth" id="btnHistoryCSV">Exportar CSV de esta fecha</button>
+      </section>
+
+      <section id="screen-products" class="screen" aria-labelledby="productsTitle" hidden>
+        <header class="screenHeader">
+          <div>
+            <p class="eyebrow">Catálogo y respaldo</p>
+            <h2 id="productsTitle">Productos</h2>
+          </div>
+          <span class="countBadge" id="productsCount">0</span>
+        </header>
+
+        <section class="card">
+          <div class="sectionHeading">
+            <h2 id="productFormTitle">Nuevo producto</h2>
+          </div>
+
+          <form id="productForm" novalidate>
+            <div class="formGrid">
+              <label class="field">
+                <span class="fieldLabel">Categoría</span>
+                <input id="prodCategory" class="control" list="categoriesList" maxlength="50" autocomplete="off" placeholder="Ej: Bebidas">
+                <datalist id="categoriesList"></datalist>
+              </label>
+
+              <label class="field">
+                <span class="fieldLabel">Nombre</span>
+                <input id="prodName" class="control" maxlength="80" autocomplete="off" placeholder="Ej: Lomito completo">
+              </label>
+
+              <label class="field">
+                <span class="fieldLabel">Precio por unidad</span>
+                <input id="prodPriceUnidad" class="control" type="number" min="1" max="999999999" step="1" inputmode="decimal" placeholder="Ej: 4500">
+              </label>
+
+              <label class="field">
+                <span class="fieldLabel">Precio por docena <span class="optional">opcional</span></span>
+                <input id="prodPriceDocena" class="control" type="number" min="1" max="999999999" step="1" inputmode="decimal" placeholder="Ej: 45000">
+              </label>
+            </div>
+
+            <p class="formError" id="productFormError" role="alert" hidden></p>
+
+            <div class="actionRow formActions">
+              <button type="button" class="btnSecondary" id="btnCancelProductEdit" hidden>Cancelar</button>
+              <button type="submit" class="btn primaryCompact" id="btnSaveProduct">Guardar producto</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card">
+          <div class="sectionHeading">
+            <h2>Lista de productos</h2>
+          </div>
+          <ul class="list productList" id="listaProductos"></ul>
+          <p class="emptyState" id="hintProductosVacio">No hay productos cargados.</p>
+        </section>
+
+        <section class="card dataCard">
+          <div class="sectionHeading">
+            <h2>Backup completo</h2>
+            <span>Recomendado</span>
+          </div>
+          <p class="helper">Guarda productos, todas las ventas y la configuración en un único archivo.</p>
+          <div class="actionRow">
+            <button type="button" class="btnSecondary" id="btnExportBackup">Descargar backup</button>
+            <button type="button" class="btnSecondary" id="btnImportBackup">Restaurar backup</button>
+          </div>
+          <input id="fileImportBackup" type="file" accept="application/json,.json" hidden>
+        </section>
+
+        <section class="card dataCard">
+          <div class="sectionHeading">
+            <h2>Solo productos</h2>
+          </div>
+          <p class="helper">Útil para copiar el catálogo. No incluye ni modifica las ventas.</p>
+          <div class="actionRow">
+            <button type="button" class="btnSecondary" id="btnExportProductos">Exportar productos</button>
+            <button type="button" class="btnSecondary" id="btnImportProductos">Importar productos</button>
+          </div>
+          <input id="fileImportProductos" type="file" accept="application/json,.json" hidden>
+        </section>
+
+        <p class="storageNote">Los datos quedan únicamente en este dispositivo. Versión <span id="appVersion">—</span>.</p>
+      </section>
+
+      <section id="screen-venta" class="screen saleScreen" aria-labelledby="saleTitle" hidden>
+        <header class="saleHeader">
+          <button type="button" class="backButton" id="btnCancelarVenta" aria-label="Volver sin guardar">‹</button>
+          <div>
+            <p class="eyebrow">Ticket en curso</p>
+            <h1 id="saleTitle">Nueva venta</h1>
+          </div>
+          <span class="saleItemCount" id="saleItemCount">0</span>
+        </header>
+
+        <section class="card saleTotalCard">
+          <p class="kpiLabel">Total del ticket</p>
+          <p class="kpiValue" id="totalTicket">$0</p>
+        </section>
+
+        <section class="card">
+          <div class="sectionHeading">
+            <h2>Agregar producto</h2>
+          </div>
+          <div class="formGrid saleProductGrid">
+            <label class="field">
+              <span class="fieldLabel">1. Categoría</span>
+              <select id="selCategoria" class="control">
+                <option value="">Elegí…</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="fieldLabel">2. Producto</span>
+              <select id="selProducto" class="control" disabled>
+                <option value="">Elegí…</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="fieldLabel">3. Cantidad</span>
+              <input id="inpCantidad" class="control" type="number" min="1" max="999" step="1" inputmode="numeric" value="1">
+            </label>
+
+            <label class="field">
+              <span class="fieldLabel">4. Precio</span>
+              <select id="selPrecio" class="control">
+                <option value="unidad">Unidad</option>
+                <option value="docena" disabled>Docena</option>
+              </select>
+            </label>
+          </div>
+
+          <p class="formError" id="saleFormError" role="alert" hidden></p>
+          <button type="button" class="btn" id="btnAgregarItem" disabled>Agregar al ticket</button>
+        </section>
+
+        <section class="card">
+          <div class="sectionHeading">
+            <h2>Ticket</h2>
+          </div>
+          <ul class="list cartList" id="listaItems"></ul>
+          <p class="emptyState" id="hintVacio">Elegí un producto para empezar.</p>
+        </section>
+
+        <section class="card checkoutDetails">
+          <fieldset class="paymentFieldset">
+            <legend>Método de pago</legend>
+            <div class="paymentOptions" id="paymentOptions">
+              <label class="paymentOption"><input type="radio" name="paymentMethod" value="efectivo"><span>Efectivo</span></label>
+              <label class="paymentOption"><input type="radio" name="paymentMethod" value="transferencia"><span>Transferencia</span></label>
+              <label class="paymentOption"><input type="radio" name="paymentMethod" value="debito"><span>Débito</span></label>
+              <label class="paymentOption"><input type="radio" name="paymentMethod" value="credito"><span>Crédito</span></label>
+              <label class="paymentOption"><input type="radio" name="paymentMethod" value="otro"><span>Otro</span></label>
+            </div>
+          </fieldset>
+
+          <label class="field noteField">
+            <span class="fieldLabel">Nota <span class="optional">opcional</span></span>
+            <input id="saleNote" class="control" type="text" maxlength="180" autocomplete="off" placeholder="Ej: sin mayonesa">
           </label>
+        </section>
+
+        <div class="stickyCheckout">
+          <div>
+            <span>Total</span>
+            <strong id="stickyTotal">$0</strong>
+          </div>
+          <button type="button" class="btn saveSaleButton" id="btnGuardarVenta" disabled>Guardar venta</button>
         </div>
-
-        <button type="button" class="btn" id="btnAgregarItem" disabled>+ Agregar al ticket</button>
       </section>
-
-      <section class="card">
-        <p class="sectionTitle">Items del ticket</p>
-        <ul class="list" id="listaItems"></ul>
-        <p class="helper" id="hintVacio">Tip: agregá productos y después tocá “Guardar”.</p>
-      </section>
-
-    </section>
-
-
-    <!-- =========================
-         PANTALLA 3: PRODUCTOS (CRUD)
-    ========================== -->
-    <section id="screen-products" hidden>
-
-      <header class="topbar">
-        <h1 class="title">Productos</h1>
-        <div class="date" id="productsInfo">Admin</div>
-      </header>
-
-      <section class="card">
-        <button type="button" class="btnSecondary" id="btnVolverDesdeProductos">Volver</button>
-      </section>
-
-      <section class="card">
-        <p class="sectionTitle">Crear / editar producto</p>
-
-        <div class="formGrid">
-          <label class="field">
-            <span class="fieldLabel">Categoría</span>
-            <input id="prodCategory" class="control" list="categoriesList" placeholder="Ej: Migas / Bebidas" />
-            <datalist id="categoriesList"></datalist>
-          </label>
-
-          <label class="field">
-            <span class="fieldLabel">Nombre</span>
-            <input id="prodName" class="control" placeholder="Ej: Jamón y queso (unidad)" />
-          </label>
-
-          <label class="field">
-            <span class="fieldLabel">Precio unidad</span>
-            <input id="prodPriceUnidad" class="control" type="number" min="0" step="1" placeholder="Ej: 1500" />
-          </label>
-
-          <label class="field">
-            <span class="fieldLabel">Precio docena (opcional)</span>
-            <input id="prodPriceDocena" class="control" type="number" min="0" step="1" placeholder="Ej: 15000" />
-          </label>
-        </div>
-
-        <div class="footerActions" style="margin-top:10px;">
-          <button type="button" class="btnSecondary" id="btnCancelProductEdit" disabled>Cancelar edición</button>
-          <button type="button" class="btnSecondary" id="btnSaveProduct">Guardar producto</button>
-        </div>
-
-        <p class="helper" id="prodHint">
-          Tip: si querés “docena” como producto aparte, creá 2 productos (unidad y docena) con nombres distintos.
-        </p>
-      </section>
-
-      <section class="card">
-        <p class="sectionTitle">Lista de productos</p>
-        <ul class="list" id="listaProductos"></ul>
-        <p class="helper" id="hintProductosVacio">No hay productos. Cargá el primero arriba.</p>
-      </section>
-      
-      <section class="card">
-        <p class="sectionTitle">Backup</p>
-
-        <div class="footerActions">
-          <button class="btnSecondary" id="btnExportProductos">Exportar</button>
-          <button class="btnSecondary" id="btnImportProductos">Importar</button>
-        </div>
-
-       <input id="fileImportProductos" type="file" accept="application/json" hidden />
-       <p class="helper">Tip: guardá el .json en Archivos/Drive.</p>
-      </section>
- 
-
-    </section>
-
+    </main>
   </div>
+
+  <dialog class="dialog" id="confirmDialog" aria-labelledby="confirmTitle">
+    <div class="dialogInner">
+      <h2 id="confirmTitle">Confirmar acción</h2>
+      <p id="confirmMessage"></p>
+      <label class="field" id="confirmPhraseField" hidden>
+        <span class="fieldLabel" id="confirmPhraseLabel"></span>
+        <input class="control" id="confirmPhraseInput" autocomplete="off">
+      </label>
+      <div class="actionRow dialogActions">
+        <button type="button" class="btnSecondary" id="confirmCancel">Cancelar</button>
+        <button type="button" class="btn dialogConfirm" id="confirmAccept">Confirmar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog" id="infoDialog" aria-labelledby="infoTitle">
+    <div class="dialogInner">
+      <div class="dialogHeading">
+        <div>
+          <p class="eyebrow" id="infoEyebrow">Detalle</p>
+          <h2 id="infoTitle">Resumen</h2>
+        </div>
+        <button type="button" class="dialogClose" id="infoClose" aria-label="Cerrar">×</button>
+      </div>
+      <div id="infoBody"></div>
+      <button type="button" class="btnSecondary fullWidth" id="infoAction" hidden></button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <noscript>
+    <p class="noscript">Esta aplicación necesita JavaScript para registrar ventas.</p>
+  </noscript>
 </body>
 </html>

@@ -1,18 +1,20 @@
-/* =========================================================
-   sw.js — Service Worker (PWA offline) [iOS-friendly]
-   - Precache assets
-   - Navegación (abrir app): siempre sirve index.html del cache
-   - Ignora query params (/?pwa=1) para que no rompa en iPhone
-========================================================= */
+"use strict";
 
-const CACHE_NAME = "sandwicheria-v3";
+/* Shell local versionado. Los datos de negocio viven en IndexedDB,
+   nunca en el cache del Service Worker. */
 
-const ASSETS = [
+const CACHE_PREFIX = "sandwicheria-shell-";
+const CACHE_NAME = `${CACHE_PREFIX}v6`;
+const LEGACY_CACHES = new Set(["sandwicheria-v3"]);
+const SCOPE_URL = new URL("./", self.registration.scope).href;
+const INDEX_URL = new URL("./index.html", self.registration.scope).href;
+
+const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./app.js",
-  "./manifest.json",
+  "./styles.css?v=6",
+  "./app.js?v=6",
+  "./manifest.json?v=6",
   "./icon-192.png",
   "./icon-512.png",
 ];
@@ -20,58 +22,80 @@ const ASSETS = [
 self.addEventListener("install", (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(ASSETS);
+    const requests = APP_SHELL.map((asset) => new Request(new URL(asset, self.registration.scope), {
+      cache: "reload",
+      credentials: "same-origin",
+    }));
+    await cache.addAll(requests);
+
+    // La versión anterior no podía avisar que había una actualización.
+    // Solo en esa migración activamos el nuevo worker automáticamente.
+    const existingCaches = await caches.keys();
+    if (existingCaches.some((name) => LEGACY_CACHES.has(name))) {
+      await self.skipWaiting();
+    }
   })());
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)));
+    const cacheNames = await caches.keys();
+    await Promise.all(
+      cacheNames
+        .filter((name) => (name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME) || LEGACY_CACHES.has(name))
+        .map((name) => caches.delete(name))
+    );
     await self.clients.claim();
   })());
 });
 
-// Cache-first + navegación segura offline (clave para iPhone)
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
 self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  if (req.method !== "GET") return;
+  const request = event.request;
+  if (request.method !== "GET") return;
 
-  // 1) Si es navegación (abrir la app / cambiar de pantalla)
-  if (req.mode === "navigate") {
-    event.respondWith((async () => {
-      const cache = await caches.open(CACHE_NAME);
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
 
-      // Siempre devolvé el index del cache (ignorando query params)
-      const cachedIndex =
-        (await cache.match("./index.html", { ignoreSearch: true })) ||
-        (await cache.match("./", { ignoreSearch: true }));
-
-      try {
-        // Intento red para mantener actualizado cuando hay internet
-        const fresh = await fetch(req);
-        return fresh;
-      } catch {
-        // Sin internet: devolvé index cacheado
-        return cachedIndex;
-      }
-    })());
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirstNavigation(request));
     return;
   }
 
-  // 2) Para assets (css/js/png): cache-first (ignorando query params)
-  event.respondWith((async () => {
-    const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(req, { ignoreSearch: true });
-    if (cached) return cached;
-
-    try {
-      const res = await fetch(req);
-      cache.put(req, res.clone());
-      return res;
-    } catch {
-      return cached || Response.error();
-    }
-  })());
+  event.respondWith(cacheFirstAsset(request));
 });
+
+async function networkFirstNavigation(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (response.ok) await cache.put(INDEX_URL, response.clone());
+    return response;
+  } catch {
+    return (
+      (await cache.match(INDEX_URL)) ||
+      (await cache.match(SCOPE_URL)) ||
+      new Response("La aplicación no está disponible sin conexión.", {
+        status: 503,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      })
+    );
+  }
+}
+
+async function cacheFirstAsset(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) await cache.put(request, response.clone());
+    return response;
+  } catch {
+    return new Response("", { status: 504, statusText: "Offline" });
+  }
+}

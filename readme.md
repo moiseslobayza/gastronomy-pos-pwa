@@ -1,141 +1,167 @@
-# Sandwichería — PWA de Registro de Ventas (Offline)
+# Ventas Sandwichería
 
-App web **instalable (PWA)** para registrar ventas de una sandwichería de forma **rápida**, **desde el celu**, y **sin depender de internet**. Guarda los datos en el navegador (localStorage/IndexedDB según versión) y funciona offline gracias a **Service Worker**.
+Punto de venta (POS) pequeño para registrar las ventas diarias de una sandwichería. Está pensado para usarse rápido desde el celular del mostrador, se puede instalar como PWA y sigue funcionando sin internet después de la primera carga.
 
----
+No tiene backend, cuentas, seguimiento ni servicios externos. Es HTML, CSS y JavaScript Vanilla: los productos, las ventas y la configuración permanecen en el dispositivo.
 
-## ✨ Funcionalidades
-- ✅ **Registro de ventas** por producto (cantidad, precio, método de pago, notas).
-- ✅ **Totales del día** / resumen por fecha (según implementación).
-- ✅ **Funciona offline** (cache + service worker).
-- ✅ **Instalable** en Android/Windows como app (PWA).
-- ✅ **Persistencia local**: los datos quedan guardados en el dispositivo.
-- ✅ UI mobile-first (pensada para uso real en mostrador).
+## Qué permite hacer
 
-> Nota: la app es **privacy-first**: no envía datos a ningún servidor.
+- Registrar una venta con productos por unidad o docena.
+- Elegir efectivo, transferencia, débito, crédito u otro método de pago.
+- Agregar una nota breve y opcional al ticket.
+- Ver facturación, cantidad de ventas, productos y ticket promedio del día.
+- Consultar el total por método de pago.
+- Abrir una venta para revisar sus productos, precios y nota.
+- Consultar cualquier fecha anterior desde Historial.
+- Ver un cierre de caja legible y descargar el CSV del día.
+- Crear, editar, borrar, exportar e importar productos.
+- Descargar y restaurar un backup completo.
 
----
+Cambiar de fecha nunca borra ventas: la aplicación crea el día nuevo automáticamente y conserva todo el historial.
 
-## 🧱 Stack
-- HTML + CSS + JavaScript (Vanilla)
-- PWA (manifest + service worker)
-- Almacenamiento local del navegador
+## Datos y privacidad
 
----
+El almacenamiento principal es **IndexedDB**, dentro del navegador y del dispositivo donde se usa la aplicación. Se eligió porque el historial crece con cada venta y permite escrituras atómicas sin reescribir todos los días en cada operación.
 
-## 📦 Requisitos
-No requiere backend.
+Al abrir esta versión por primera vez, los datos existentes de **sandwicheria_store_v2** o **sandwicheria_store_v1** en localStorage se migran automáticamente. El contenido anterior no se elimina, para conservar una copia de recuperación. Si IndexedDB no está disponible en una instalación nueva, la aplicación puede usar localStorage como compatibilidad.
 
-Para que la PWA (service worker) funcione correctamente **no abras el archivo con doble click** (`file://`).
-Usá un servidor local o hosting (GitHub Pages, Netlify, Vercel, etc.).
+Nada se sincroniza entre celulares o computadoras. Cada instalación tiene su propia base de datos.
 
----
+> Borrar los datos del sitio, limpiar el almacenamiento del navegador, restablecer el teléfono o desinstalar una PWA eliminando también sus datos puede borrar el historial. El Service Worker permite trabajar offline, pero **no es un backup de las ventas**.
 
-## ▶️ Cómo correrla localmente
+## Backup recomendado
 
-### Opción A — VS Code (recomendado)
-1. Instalá la extensión **Live Server**
-2. Abrí el proyecto en VS Code
-3. Click derecho en `index.html` → **Open with Live Server**
+En **Productos → Backup completo → Descargar backup** se genera un JSON que contiene:
 
-### Opción B — Python (servidor simple)
-```bash
-# Dentro de la carpeta del proyecto:
+- todos los productos;
+- todas las ventas, separadas por fecha;
+- métodos de pago y notas;
+- configuración;
+- versión del esquema y del backup;
+- fecha y hora de exportación.
+
+Conviene descargarlo al terminar cada jornada o, como mínimo, varias veces por semana, y copiarlo a otro dispositivo o almacenamiento seguro.
+
+### Restaurar un backup
+
+1. Abrir **Productos → Backup completo → Restaurar backup**.
+2. Elegir el archivo JSON.
+3. Revisar el resumen que muestra la aplicación.
+4. Escribir **RESTAURAR** y confirmar.
+
+La estructura completa se valida antes de modificar datos. Un archivo inválido no borra nada. Justo antes de una restauración válida, la aplicación descarga automáticamente otro backup de los datos actuales. La sustitución en IndexedDB se hace dentro de una única transacción: o se guarda completa o se revierte.
+
+### Exportar o importar solo productos
+
+La sección **Solo productos** sirve para mover el catálogo sin tocar las ventas. Una importación válida muestra cuántos productos reemplazará y pide confirmación.
+
+## Uso diario
+
+1. Abrir **Hoy** y tocar **Nueva venta**.
+2. Elegir categoría, producto, cantidad y unidad/docena.
+3. Agregar los productos al ticket.
+4. Elegir el método de pago; la app recuerda el último utilizado.
+5. Agregar una nota solo si hace falta.
+6. Tocar **Guardar venta**.
+
+El botón se bloquea durante el guardado para evitar duplicados. Si el almacenamiento falla, la aplicación mantiene el ticket abierto y muestra un aviso para descargar un backup de emergencia.
+
+El **Cierre de caja** es únicamente un resumen. No elimina ventas ni “inicia” otro día.
+
+## Instalación
+
+La aplicación debe servirse por HTTPS o desde localhost; no funciona correctamente como PWA al abrir index.html con doble clic mediante file://.
+
+### Android — Chrome
+
+1. Abrir la URL publicada.
+2. Esperar la primera carga completa.
+3. Menú ⋮ → **Instalar aplicación** o **Agregar a pantalla principal**.
+4. Abrirla una vez con conexión para confirmar la instalación; después puede trabajar offline.
+
+### Windows — Chrome o Edge
+
+1. Abrir la URL publicada.
+2. Usar el icono **Instalar** de la barra de direcciones.
+3. Confirmar la instalación.
+
+### iPhone o iPad — Safari
+
+1. Abrir la URL publicada.
+2. Tocar **Compartir**.
+3. Elegir **Agregar a pantalla de inicio**.
+
+El manifest usa rutas relativas, scope y start_url compatibles con una subcarpeta de GitHub Pages, y el modo instalado abre como standalone.
+
+## Ejecutar localmente
+
+Con Python:
+
+~~~bash
 python -m http.server 5500
-```
+~~~
 
-### Opción C — Node (http-server)
-```bash
-npm i -g http-server
-http-server -p 5500
-```
+Después abrir http://localhost:5500/.
 
-### 📲 Instalar como app (PWA)
+También se puede usar cualquier servidor estático local. No hace falta instalar dependencias ni ejecutar un build.
 
-### Android (Chrome)
+## Publicar en GitHub Pages
 
-Abrí la app desde una URL (localhost o hosting)
+1. Subir estos archivos a la rama que se quiera publicar.
+2. En el repositorio de GitHub, abrir **Settings → Pages**.
+3. En **Build and deployment**, elegir **Deploy from a branch**.
+4. Seleccionar la rama y la carpeta **/ (root)**.
+5. Guardar y esperar la URL HTTPS.
 
-Menú ⋮ → “Instalar app” / “Agregar a pantalla principal”
+Archivos que deben publicarse juntos:
 
-### Windows / Desktop (Chrome/Edge)
+~~~text
+index.html
+styles.css
+app.js
+manifest.json
+sw.js
+icon-192.png
+icon-512.png
+~~~
 
-Abrí la app
+No cambiar el nombre ni la ubicación de sw.js sin revisar su scope. Las rutas relativas permiten que la misma versión funcione tanto en localhost como en una subcarpeta de GitHub Pages.
 
-Ícono de instalación en la barra de direcciones → Instalar
+## Actualizaciones y funcionamiento offline
 
+El Service Worker precarga toda la interfaz indispensable y no depende de CDNs. Las navegaciones intentan obtener la versión online y vuelven al index.html cacheado cuando no hay red. Los assets versionados se sirven desde cache.
 
-### 📁 Estructura típica del proyecto
+Cuando existe una versión nueva, la aplicación muestra **Hay una versión nueva lista**. El botón **Actualizar** activa el nuevo Service Worker y recarga la interfaz. Si hay un ticket sin guardar, pide confirmación antes de descartarlo. Los caches viejos de esta aplicación se eliminan al activar la versión nueva; IndexedDB no se toca.
 
-```text
-sandwicheria-app/
-├── index.html
-├── css/
-│   └── styles.css
-├── js/
-│   ├── app.js
-│   └── storage.js
-├── pwa/
-│   ├── manifest.json
-│   └── service-worker.js
-├── assets/
-│   ├── icons/
-│   │   ├── icon-192.png
-│   │   └── icon-512.png
-│   └── img/
-└── README.md
-```
+Para probar el modo offline:
 
-### 💾 Datos y persistencia
-Los datos se guardan localmente en el dispositivo.
+1. Abrir la aplicación una vez con conexión.
+2. Confirmar que el Service Worker está activo.
+3. Desconectar la red.
+4. Recargar y registrar una venta de prueba.
+5. Cerrar y volver a abrir para comprobar la persistencia.
 
-Si borrás los datos del navegador o desinstalás/limpiás storage, se pierde el historial.
+## Estructura
 
-Recomendación práctica (si ya lo implementaste o lo vas a implementar):
+~~~text
+.
+├── index.html       # estructura y pantallas
+├── styles.css       # diseño mobile-first
+├── app.js           # ventas, productos, IndexedDB, backup e interfaz
+├── manifest.json    # instalación PWA
+├── sw.js            # cache offline y actualización
+├── icon-192.png
+├── icon-512.png
+└── readme.md
+~~~
 
-Exportar/Importar ventas a JSON/CSV para backups
+## Recuperación
 
-### 🚀 Deploy (GitHub Pages)
+- Si una importación informa que el archivo es inválido, los datos actuales siguen intactos.
+- Si aparece un error de guardado, no cerrar la app: usar el botón **Backup** del aviso para descargar una copia de emergencia.
+- Si se borraron los datos del navegador, solo se pueden recuperar restaurando un backup descargado previamente.
+- Instalar una nueva copia en otro navegador o dispositivo no transfiere automáticamente la información.
 
-Subí el repo a GitHub
+## Licencia
 
-En GitHub: Settings → Pages
-
-Elegí la branch (ej. main) y carpeta (/root)
-
-Guardá y esperá a que te dé la URL
-
-Importante: la PWA funciona perfecto en GitHub Pages porque sirve por HTTPS.
-
-### 🧪  Troubleshooting rápido
-
-No se instala / no cachea: asegurate de estar usando http:// o https:// (no file://)
-
-Cambios no se ven: el service worker puede estar cacheando.
-
-Abrí DevTools → Application → Service Workers → Unregister
-
-DevTools → Application → Storage → Clear site data
-
-Íconos no aparecen: revisá rutas del manifest.json y tamaños 192/512.
-
-### 🛣️ Roadmap (ideas)
-
-Exportar/Importar ventas (JSON/CSV)
-
-Estadísticas: top productos, promedio por día, comparativas
-
-Gestión de productos (CRUD) desde la UI
-
-Multi-usuario / PIN (modo empleado)
-
-Sync opcional a la nube (cuando haya internet)
-
-### 👤 Autor
-
-Moisés Lobayza
-
-### 📄 Licencia
-
-MIT — libre para usar y modificar.
-
+MIT.

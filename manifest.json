@@ -2,15 +2,29 @@
   "id": "./",
   "name": "Ventas Sandwichería",
   "short_name": "Ventas",
-  "description": "Registro de ventas (tickets) y administración de productos para sandwichería. Funciona offline.",
+  "description": "Punto de venta privado y offline para una sandwichería.",
+  "lang": "es-AR",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#fffbe6",
-  "theme_color": "#111827",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#f4f1e8",
+  "theme_color": "#17211b",
+  "categories": ["business", "food", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
   ]
 }
